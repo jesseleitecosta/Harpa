@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hinário do Jessé</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7fafc;
+        }
+        /* Esconde barra de rolagem mas mantém funcionalidade */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Destaque do Refrão baseado na imagem canônica */
+        .refrao {
+            font-weight: 700;
+            padding-left: 1rem;
+            border-left: 4px solid #1E88E5;
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: #0D47A1;
+        }
+        /* Custom ranges styling */
+        input[type="range"]::-webkit-slider-thumb {
+            background: #1E88E5;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- CABEÇALHO AZUL PRINCIPAL -->
+    <header class="bg-[#1E88E5] text-white px-4 py-3 shadow-md flex items-center justify-between z-10 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="btnToggleSidebar" class="p-2 hover:bg-blue-700 rounded-lg transition-colors md:hidden focus:outline-none" title="Menu de Hinos">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-book-open"></i> Hinário do Jessé
+            </h1>
+        </div>
+        
+        <!-- Controles Rápidos -->
+        <div class="flex items-center space-x-4">
+            <!-- Tamanho de Fonte Slider (Estilo Harpa com o Tт) -->
+            <div class="flex items-center space-x-2 bg-blue-700 bg-opacity-40 px-3 py-1.5 rounded-lg text-sm">
+                <span class="text-xs font-semibold">T</span>
+                <input type="range" id="fontSizeSlider" min="14" max="32" value="18" class="w-16 sm:w-24 accent-white cursor-pointer h-1 bg-blue-300 rounded-lg appearance-none">
+                <span class="text-base font-semibold">т</span>
+            </div>
+            
+            <!-- Botão Novo Hino Acessível no Celular -->
+            <button id="btnHeaderNewHymn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1 shadow transition-colors" title="Criar Novo Hino">
+                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Novo</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR ESQUERDA: LISTA DE HINOS E PERFIL -->
+        <aside id="sidebar" class="absolute inset-y-0 left-0 w-80 bg-white border-r border-gray-200 z-20 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col h-full shrink-0 shadow-lg md:shadow-none">
+            
+            <!-- ÁREA DO GOOGLE USER (AUTENTICAÇÃO) -->
+            <div id="userProfileArea" class="p-3 border-b border-gray-200 bg-gray-50">
+                <div id="userLoggedOut" class="flex flex-col items-center py-2">
+                    <p class="text-xs text-gray-500 mb-2 text-center">Para sincronizar suas notas entre o PC e o Celular automaticamente:</p>
+                    <button id="btnGoogleLogin" class="w-full bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors text-sm">
+                        <i class="fa-brands fa-google text-red-500"></i> Entrar com o Google
+                    </button>
+                </div>
+                <div id="userLoggedIn" class="hidden flex items-center justify-between py-1">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <img id="userAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border border-gray-200 shadow-sm object-cover">
+                        <div class="min-w-0">
+                            <h4 id="userName" class="font-bold text-gray-800 text-sm truncate">Nome de Usuário</h4>
+                            <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-circle text-[6px]"></i> Sincronizado
+                            </p>
+                        </div>
+                    </div>
+                    <button id="btnGoogleLogout" class="text-gray-400 hover:text-red-500 p-2 text-sm transition-colors" title="Sair da Conta">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Barra de Busca -->
+            <div class="p-3 border-b border-gray-100 bg-gray-50">
+                <div class="relative flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="searchInput" placeholder="Buscar hinos..." class="w-full bg-white border border-gray-300 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+                <!-- Dica informativa de busca remota -->
+                <div class="text-[10px] text-gray-400 mt-1.5 flex items-center gap-1">
+                    <i class="fa-solid fa-globe text-blue-400"></i> Digite o número do hino para localizá-lo
+                </div>
+            </div>
+
+            <!-- Abas de Filtros -->
+            <div class="flex border-b border-gray-100 text-sm text-center font-medium shrink-0 bg-gray-50">
+                <button id="tabAll" class="flex-1 py-3 border-b-2 border-blue-600 text-blue-600 focus:outline-none">
+                    Todos
+                </button>
+                <button id="tabFavs" class="flex-1 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none">
+                    ⭐ Favoritos
+                </button>
+                <button id="tabNotes" class="flex-1 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none">
+                    📝 Com Notas
+                </button>
+            </div>
+
+            <!-- Lista de Hinos (Scrollable) -->
+            <div id="hymnList" class="flex-1 overflow-y-auto divide-y divide-gray-100 no-scrollbar">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+
+            <!-- RODAPÉ DA SIDEBAR: STATUS DE CONEXÃO -->
+            <div class="p-3 bg-gray-50 border-t border-gray-200 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-500 flex items-center gap-1">
+                        <i class="fa-solid fa-cloud"></i> Sincronização em Nuvem:
+                    </span>
+                    <span id="connectionStatus" class="font-semibold text-amber-600 flex items-center gap-1">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Conectando...
+                    </span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- OVERLAY PARA FECHAR SIDEBAR NO CELULAR -->
+        <div id="sidebarOverlay" class="hidden absolute inset-0 bg-black bg-opacity-40 z-15 md:hidden"></div>
+
+        <!-- ÁREA CENTRAL: LETRA INTEGRAL -->
+        <main class="flex-1 flex overflow-hidden bg-white relative">
+            
+            <!-- PAINEL DA LETRA -->
+            <section class="flex-1 flex flex-col h-full relative overflow-hidden">
+                <!-- Barra de Ferramentas do Hino -->
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-3">
+                        <!-- Botão Favoritar -->
+                        <button id="btnFavorite" class="text-gray-400 hover:text-yellow-500 text-xl focus:outline-none transition-colors">
+                            <i class="fa-regular fa-star"></i>
+                        </button>
+
+                        <!-- Tom Sugerido -->
+                        <div id="suggestedToneBadge" class="hidden sm:flex items-center space-x-1.5 text-xs bg-blue-50 text-blue-800 rounded px-2.5 py-1.5 border border-blue-100">
+                            <i class="fa-solid fa-music text-blue-600"></i>
+                            <span class="font-medium">Tom Sugerido:</span>
+                            <span id="displaySuggestedTone" class="font-bold text-blue-900"></span>
+                        </div>
+
+                        <!-- Campo N.Init -->
+                        <div id="nInitBadge" class="hidden sm:flex items-center space-x-1.5 text-xs bg-amber-50 text-amber-800 rounded px-2.5 py-1.5 border border-amber-100">
+                            <i class="fa-solid fa-hashtag text-amber-600"></i>
+                            <span class="font-medium">N.Init:</span>
+                            <span id="displayNInit" class="font-bold text-amber-900"></span>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Edição e Nota -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Botão Anotações Pessoais (Para abrir a gaveta) -->
+                        <button id="btnOpenNotes" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-solid fa-pen-nib"></i> Anotações <span id="notesCountBadge" class="hidden bg-white text-amber-600 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">!</span>
+                        </button>
+                        <button id="btnEditHymn" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar Letra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conteúdo da Letra (Scrollable) -->
+                <div id="lyricsContainer" class="flex-1 overflow-y-auto p-6 md:p-8 no-scrollbar bg-slate-50">
+                    <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 relative">
+                        <div id="hymnLoaderOverlay" class="hidden absolute inset-0 bg-white bg-opacity-95 rounded-xl flex flex-col items-center justify-center z-10 transition-opacity">
+                            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-2"></i>
+                            <span class="text-sm font-bold text-gray-500">Buscando letra oficial...</span>
+                        </div>
+
+                        <div class="text-center mb-6">
+                            <h2 id="currentHymnNumber" class="text-[#1E88E5] font-bold text-lg md:text-xl uppercase tracking-wider mb-1">HINO 01</h2>
+                            <h3 id="currentHymnTitle" class="text-gray-900 font-extrabold text-2xl md:text-3xl">Chuvas de Graça</h3>
+                            
+                            <!-- Elementos responsivos de Tom e N.Init para mobile -->
+                            <div class="sm:hidden mt-2 flex flex-wrap justify-center gap-2">
+                                <span id="mobileSuggestedToneSpan" class="hidden text-xs bg-blue-50 text-blue-800 px-2.5 py-1 rounded border border-blue-100">
+                                    Tom: <span id="displaySuggestedToneMobile" class="font-bold text-blue-900"></span>
+                                </span>
+                                <span id="mobileNInitSpan" class="hidden text-xs bg-amber-50 text-amber-800 px-2.5 py-1 rounded border border-amber-100">
+                                    N.Init: <span id="displayNInitMobile" class="font-bold text-amber-900"></span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Corpo da Letra -->
+                        <div id="hymnText" class="leading-relaxed whitespace-pre-line text-gray-700 space-y-4" style="font-size: 18px;">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GAVETA LATERAL DIREITA: ANOTAÇÕES PESSOAIS (SLIDE-IN DRAWER) -->
+            <div id="notesOverlay" class="hidden fixed inset-0 bg-black bg-opacity-30 z-30 transition-opacity"></div>
+            <section id="notesDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col h-full border-l border-gray-200">
+                <!-- Cabeçalho do Bloco de Notas -->
+                <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center shrink-0">
+                    <div class="flex items-center space-x-2 font-bold text-gray-700 text-sm">
+                        <i class="fa-solid fa-pen-nib text-amber-500"></i>
+                        <span>Anotações Pessoais</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span id="saveStatus" class="text-xs text-gray-400">salvo</span>
+                        <button id="btnCloseNotes" class="text-gray-500 hover:text-gray-800 text-lg focus:outline-none" title="Fechar anotações">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Área de Digitação de Notas -->
+                <div class="flex-1 p-4 flex flex-col h-full bg-amber-50 bg-opacity-30">
+                    <textarea id="notesArea" placeholder="Escreva aqui suas cifras, esboço de pregação, observações ou referências bíblicas para este hino..." class="w-full flex-1 bg-transparent border-0 resize-none text-sm text-gray-700 focus:outline-none focus:ring-0 leading-relaxed font-sans placeholder-gray-400"></textarea>
+                </div>
+
+                <!-- SUPORTE MUSICAL: DIAPASÃO E METRÔNOMO -->
+                <div class="border-t border-gray-200 bg-gray-50 p-4 shrink-0">
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Auxílio Musical</div>
+                    
+                    <!-- Diapasão -->
+                    <div class="mb-3">
+                        <span class="text-xs text-gray-600 block mb-1">🎵 Diapasão (Tom de referência):</span>
+                        <div class="grid grid-cols-7 gap-1">
+                            <button onclick="playPitch(261.63)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">C</button>
+                            <button onclick="playPitch(293.66)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">D</button>
+                            <button onclick="playPitch(329.63)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">E</button>
+                            <button onclick="playPitch(349.23)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">F</button>
+                            <button onclick="playPitch(392.00)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">G</button>
+                            <button onclick="playPitch(440.00)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">A</button>
+                            <button onclick="playPitch(493.88)" class="bg-white border border-gray-300 hover:bg-blue-50 py-1 text-xs font-bold rounded shadow-sm text-gray-700 active:bg-blue-200 transition-colors">B</button>
+                        </div>
+                    </div>
+
+                    <!-- Metrônomo Portátil -->
+                    <div class="flex items-center justify-between bg-white border border-gray-200 p-2 rounded-lg shadow-sm">
+                        <div class="flex items-center space-x-2">
+                            <button id="btnToggleMetronome" class="bg-blue-600 hover:bg-blue-700 text-white w-9 h-9 rounded-full flex items-center justify-center shadow focus:outline-none transition-transform active:scale-95">
+                                <i class="fa-solid fa-play text-sm"></i>
+                            </button>
+                            <div>
+                                <span class="text-xs text-gray-500 block leading-none">Metrônomo</span>
+                                <span id="bpmDisplay" class="font-extrabold text-xs text-gray-700">120 BPM</span>
+                            </div>
+                        </div>
+                        <input type="range" id="metronomeBpm" min="40" max="220" value="120" class="w-28 sm:w-32 accent-blue-600 cursor-pointer h-1 bg-gray-200 rounded-lg appearance-none">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL 2: EDITAR OU ADICIONAR NOVO HINO -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+            <div class="bg-[#1E88E5] text-white px-6 py-4 flex justify-between items-center shrink-0">
+                <h3 id="modalTitle" class="text-lg font-bold"><i class="fa-solid fa-pen-to-square"></i> Editar Letra do Hino</h3>
+                <button id="btnCloseEditModal" class="text-white hover:text-blue-100 text-xl focus:outline-none">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto flex-1">
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                    <div class="sm:col-span-1 space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Número:</label>
+                        <input type="number" id="editHymnNumber" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="sm:col-span-2 space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Título do Hino:</label>
+                        <input type="text" id="editHymnTitle" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <!-- Campo de Tom Sugerido -->
+                    <div class="sm:col-span-1 space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Tom:</label>
+                        <input type="text" id="editHymnSuggestedTone" placeholder="Ex: G, F#m" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-blue-600">
+                    </div>
+                    <!-- Caixa de Seleção N.Init (1-7) -->
+                    <div class="sm:col-span-1 space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">N.Init:</label>
+                        <select id="editHymnNInit" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-amber-700">
+                            <option value="">Nenhum</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Letra Completa:</label>
+                        <span class="text-[10px] text-gray-400">Escreva <strong>[REFRÃO]</strong> antes das estrofes que forem o refrão.</span>
+                    </div>
+                    <textarea id="editHymnLyrics" rows="12" placeholder="Digite ou cole a letra oficial aqui..." class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans leading-relaxed resize-none"></textarea>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+                <button id="btnRestoreOriginal" class="text-red-500 hover:text-red-700 font-semibold text-sm transition-colors">
+                    <i class="fa-solid fa-trash-arrow-up"></i> Restaurar Letra Original
+                </button>
+                <div class="flex space-x-3">
+                    <button id="btnCancelEdit" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors">Cancelar</button>
+                    <button id="btnSaveHymn" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Salvar Hino</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CONFIRMAÇÃO PERSONALIZADA -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-55">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden transform transition-all p-6 text-center">
+            <div class="text-amber-500 text-4xl mb-3">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 id="confirmTitle" class="text-lg font-bold text-gray-800 mb-2">Aviso Importante</h4>
+            <p id="confirmMessage" class="text-sm text-gray-600 mb-6 leading-relaxed">Você deseja realmente prosseguir com esta ação?</p>
+            <div class="flex space-x-3">
+                <button id="btnConfirmCancel" class="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors">Não, voltar</button>
+                <button id="btnConfirmOk" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold transition-colors">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES TOASTS -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- FIREBASE INTEGRATION & LOGIC -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore';
+
+        // ------------------ BASE DE DADOS EXPANDIDA OFICIAL DA HARPA CRISTÃ ------------------
+        const OFICIAL_HYMNS_DB = {
+            1: {
+                number: 1,
+                title: "Chuvas de Graça",
+                suggestedTone: "G",
+                nInit: "3",
+                lyrics: `Deus prometeu com certeza, Chuvas de graça mandar;
+Ele nos dá fortaleza, E ricas bênçãos sem par.
+
+[REFRÃO]
+CHUVAS DE GRAÇA, CHUVAS PEDIMOS SENHOR,
+MANDA-NOS CHUVAS CONSTANTES, CHUVAS DO CONSOLADOR.
+
+Cristo nos tem concedido O santo Consolador,
+De plena paz nos enchido, Para o reinado de amor.
+
+Dá-nos, Senhor, amplamente, Teu grande gozo e poder
+Fonte de amor permanente, Põe dentro de nosso ser.
+
+Faze os teus servos piedosos, Dá-lhes virtude e valor,
+Dando os teus dons preciosos Do santo Preceptor.`
+            },
+            2: {
+                number: 2,
+                title: "Saudosa Lembrança",
+                suggestedTone: "F",
+                nInit: "1",
+                lyrics: `Oh! que saudosa lembrança Tenho de ti, ó Sião,
+Terra que eu tanto amo, Pois és do meu coração.
+Eu para ti voarei, Quando o Senhor meu voltar;
+Pois Ele foi para o céu, E breve vem me buscar.
+
+[REFRÃO]
+SIM, EU PORFIAREI POR ESSA TERRA DE ALÉM;
+E LÁ TERMINAREI AS MUITAS LUTAS DE AQUÉM
+LÁ ESTÁ MEU BOM SENHOR AO QUAL EU DESEJO VER;
+ELE É TUDO P'RA MIM, E SEM ELE NÃO POSSO VIVER.
+
+Bela, mui bela, é a esperança, Dos que vigiam por ti,
+Pois eles recebem força, Que só se encontra ali;
+Os que procuram chegar Ao teu regaço, ó Sião,
+Livres serão de pecar E de toda a tentação.
+
+Diz a Sagrada Escritura Que são formosos os pés
+Daqueles que boas novas Levam para os infiéis;
+E, se tão belo é falar Dessas grandezas, aqui,
+Que não será o gozar A graça que existe ali.`
+            },
+            3: {
+                number: 3,
+                title: "Plena Paz",
+                suggestedTone: "F",
+                nInit: "5",
+                lyrics: `Plena paz e santo gozo, Tenho em ti, ó meu Jesus!
+Pois eu cri em Tua morte sobre a Cruz;
+No Senhor só confiando Neste mundo viverei,
+Entoando aleluias ao meu Rei!
+
+[REFRÃO]
+OH! GLÓRIA AO MEU JESUS! POIS É DIGNO DE LOUVOR;
+É MEU REI, MEU BOM PASTOR, E MEU SENHOR.
+COMO OS ANJOS, QUE O LOUVAM, EU TAMBÉM O LOUVAREI,
+ENTOANDO ALELUIAS AO MEU REI!
+
+O amor de Jesus Cristo É mui grande para mim,
+Pois Sua graça me encheu de amor sem fim.
+Meu Jesus foi para a glória, Mas um dia eu O verei,
+Entoando aleluias ao meu Rei!
+
+Este mundo não deseja Tão bondoso Salvador,
+Não sabendo agradecer Seu grande amor.
+Eu, porém, estou gozando Do favor da Sua lei,
+Entoando aleluias ao meu Rei!
+
+Quando o povo israelita Com Jesus se consertar,
+Dando glória ao Seu nome, sem cessar.
+Nesse tempo, céu e terra Hão de ser a mesma grei,
+Entoando aleluias ao meu Rei!`
+            },
+            4: {
+                number: 4,
+                title: "Deus Velará Por Ti",
+                suggestedTone: "Bb",
+                lyrics: `Não desanimes, Deus proverá; Deus velará por ti;
+Sob Suas asas te acolherá; Deus velará por ti.
+
+[REFRÃO]
+DEUS CUIDARÁ DE TI NO TEU VIVER, NO TEU SOFRER;
+SEU OLHAR TE ACOMPANHARÁ; DEUS VELARÁ POR TI.
+
+Se o coração palpitar de dor, Deus velará por ti;
+Tu já provaste Seu terno amor. Deus velará por ti.
+
+Nos desalentos, nas provações, Deus velará por ti;
+Lembra-te dEle nas tentações; Deus velará por ti.
+
+Tudo o que pedes Ele fará; Deus velará por ti;
+E o que precisas não negará. Deus velará por ti.
+
+Como estiveres, não temas, vem! Deus velará por ti;
+Ele te entende e te ama bem! Deus velará por ti.`
+            },
+            5: {
+                number: 5,
+                title: "Ó Desce, Fogo Santo",
+                suggestedTone: "E",
+                lyrics: `Espírito, alma e corpo, Oferto a Ti, Senhor,
+Como hóstia verdadeira, Em oblação de amor.
+
+[REFRÃO]
+EU TUDO A DEUS CONSAGRO EM CRISTO, O VIVO ALTAR;
+Ó DESCE, FOGO SANTO, DO CÉU VEM TU SELAR!
+
+Sou teu, ó Jesus Cristo! Teu Sangue me comprou;
+Eu quero a Tua graça, Pois de ti sempre sou.
+
+Espírito divino, Do Pai a promissão;
+Sedenta a alma pede, A Ti, a santa unção.`
+            },
+            6: {
+                number: 6,
+                title: "Na Maldição Da Cruz",
+                suggestedTone: "G",
+                lyrics: `Tu, na maldição da cruz, Elevaste o teu amor,
+Em rogar, Senhor Jesus: "Pai, perdoa ao transgressor".
+
+[REFRÃO]
+QUERES, QUERES, COM VIGOR, MUITAS ALMAS DESPERTAR;
+QUERES, QUERES, Ó SENHOR! TRANSFORMAR, REMIR, CURAR;
+OH! SIM! OH!, SIM! QUERES TODOS RENOVAR.
+
+O Maligno tentador É o autor da perdição
+Do pecado, mal e dor, Da doença e da aflição.
+
+Tu levaste, ó bom Jesus, O pecado, o mal e a dor,
+E a doença, sobre a cruz; És o grande Salvador!
+
+Deus é bom, quer sempre o bem Do oprimido pecador;
+Mal nenhum, em Si, Deus tem; "Deus é luz, Deus é amor!"`
+            },
+            7: {
+                number: 7,
+                title: "Cristo Cura, Sim!",
+                suggestedTone: "Ab",
+                lyrics: `Contra os males deste mundo, Deus nos vale só;
+Não há mal que Deus não cure, Pois de nós tem dó.
+
+[REFRÃO]
+CRISTO CURA, SIM, CRISTO CURA, SIM,
+SEU AMOR POR NÓS É IMENSO; ELE CURA, SIM!
+
+Derramou Seu sangue puro P'ra remir a mim;
+Quando ungido sou de azeite, Sou curado, enfim!
+
+Só noss'alma é bem segura, Oculta em Jesus;
+Ele o bálsamo da vida, Derramou na cruz.
+
+Glória a Deus! Eterna glória, Demos-Lhe louvor;
+Glória, cânticos e hosanas Dai ao Redentor!`
+            },
+            8: {
+                number: 8,
+                title: "Cristo, O Fiel Amigo",
+                suggestedTone: "F",
+                lyrics: `Cristo Jesus é fiel amigo, Ele só, Ele só.
+E nas fraquezas está comigo, Ele só, Ele só.
+
+[REFRÃO]
+E NAS LUTAS DE CADA DIA, CRISTO NUNCA ME DEIXA SÓ;
+POIS ELE É MEU SEGURO GUIA, ELE SÓ, ELE SÓ.
+
+Não há amigo mais nobre e digno, Não, não há; não, não há.
+Nem mais humilde e mais benigno, Não, não há; não, não há.
+
+Ao pecador perdoar anela, Ele só, Ele só;
+E pelos Seus santos sempre vela, Ele só, Ele só;
+
+Deus, em Seu Filho, se há comprazido, N'Ele só, n'Ele só;
+Mas Sua glória me há repartido, D'Ele só, d'Ele só.`
+            },
+            9: {
+                number: 9,
+                title: "Marchai, Soldados De Cristo",
+                suggestedTone: "Bb",
+                lyrics: `Marchai, soldados de Cristo Jesus, Marchai, marchai e enfrentai
+O inimigo do bem e da luz; Soldados, avançai!
+
+[REFRÃO]
+SIM, AVANÇAR, NÃO RECUAR; SEM TEMOR, COM VALOR,
+MARCHAI, LUTAI, POIS CRISTO VAI NA VANGUARDA - AVANÇAI!
+
+Marchai, soldados, bem alto erguei O pavilhão da salvação
+A Belial, firmes, ousados, vencei; Vencei a corrupção.
+
+Vossa armadura de guerra tomai, O elmo, sim, da salvação;
+E a Espada: a Bíblia levai, E vencereis, então.
+
+Avante, avante, confiando em Jesus, Fortes sereis por Seu amor,
+Marchai invictos, soldados da luz, Jesus é o vencedor.`
+            },
+            10: {
+                number: 10,
+                title: "Eu Te Louvo",
+                suggestedTone: "A",
+                lyrics: `Glória a Deus, o Pai Eterno, Cujo trono é os céus;
+O universo Lhe pertence. Glória, sim, ao nosso Deus.
+
+[REFRÃO]
+EU TE LOUVO! EU TE LOUVO! OH! JESÚS, MEU SALVADOR!
+DAI-LHE GLÓRIAS, Ó REMIDOS! POIS SEU SANGUE LIMPA O PECADOR.
+
+Glória ao Filho mui amado, Que merece o louvor,
+Demos glória ao Seu nome, Ao Cordeiro, ao Redentor.
+
+Demos nós, ao Santo Espírito, Mil louvores por seu dom;
+Por Sua graça tão imensa, Glória a Ele, Ele é bom!
+
+Glória, glória ao Pai bendito, Glória, glória a Jesus;
+Glória dai ao Santo Espírito, Ao Deus trino, nossa luz.`
+            },
+            11: {
+                number: 11,
+                title: "Ó Cristão, Eia Avante",
+                suggestedTone: "G",
+                lyrics: `Ó cristãos, eia avante, eia avante! Por Jesus e Sua Igreja a lutar
+Co'a Palavra, essa espada flamante, Vamos, vamos, irmãos, pelejar.
+
+[REFRÃO]
+Ó CRISTÃO, SEMPRE AVANTE NA LIDA! O EVANGELHO COM FÉ A PREGAR
+AO TRABALHO O SENHOR NOS CONVIDA, VAMOS, POIS, COM JESUS PELEJAR.
+
+Ó cristãos, eia avante, eia avante! Boa nova aos perdidos levar;
+Por cidades e vilas adiante, Salvação vamos nós proclamar.
+
+Ó cristãos, eia avante, eia avante! Pois a aurora já vemos raiar
+Desse dia em que Cristo, triunfante, Neste mundo há de sempre reinar.
+
+Ó cristãos, eia avante, eia avante! Vexilários da fé vamos ser
+E a vanguarda do exército brilhante Que gloriosa vitória há de ter!`
+            },
+            12: {
+                number: 12,
+                title: "Vem Já, Pecador",
+                suggestedTone: "Ab",
+                lyrics: `Pecador, vê a luz, brilha para ti, Lá da cruz do Salvador,
+Onde a vida deu; e do lado Seu Corre sangue redentor.
+
+[REFRÃO]
+Ó VEM JÁ, COMO ESTÁS! VEM AGORA, AO SALVADOR;
+SUA VIDA DEU, TUDO PADECEU; NÃO DEMORES! VEM JÁ, PECADOR!
+
+Na escuridão do Jardim orou Tão aflito meu Senhor;
+Quando pranteou, sangue Seu suou, No Getsêmane em dor!
+
+Vê o Salvador co'as feridas mãos Te chamando, ó pecador!
+Vida eterna tem os que n'Ele crêem E aceitam o Seu amor.
+
+Vem a Cristo, vem confessando, já, Teus pecados, e te ouvirá,
+E no coração sentirás o perdão, Pois Jesus te perdoará.`
+            },
+            13: {
+                number: 13,
+                title: "Jesus Comprou-me",
+                suggestedTone: "C",
+                lyrics: `Jesus comprou-me do mundo aqui, Palavras doces são para mim;
+Jesus comprou-me e vai me dar Eterno gozo, celeste lar.
+
+[REFRÃO]
+JESUS COMPROU-ME DA ESCRAVIDÃO, A PAZ EU GOZO POR SEU PERDÃO;
+SOU DESPREZADO UM POUCO AQUI, MAS EU ESPERO GOZAR ALÍ.
+
+Jesus comprou-me e eu fiquei P'ra sempre livre da dura lei!
+Agora espero até Ele vir P'ra que me leve ao Seu porvir.
+
+O vinde, amigos, e junto a nós, Ouvi depressa do céu a voz;
+O que demora não chegará, Porque se perde e morrerá.
+
+Jesus comprou-me e me dará Lugar às mesas que esperam lá.
+Ouve o convite, ó pecador, Pois Jesus Cristo é o Salvador.`
+            },
+            14: {
+                number: 14,
+                title: "Gozo Em Jesus",
+                suggestedTone: "G",
+                lyrics: `Oh! que gozo sinto em Jesus Que por mim expirou na cruz;
+A minh'alma deu divina luz, Glória a meu Jesus!
+
+[REFRÃO]
+QUANTA GLÓRIA VEJO EM JESUS, GOZO SANTO E BENDITA LUZ;
+CUJOS RAIOS BRILHAM LÁ NA CRUZ, NA QUAL MORREU JESUS.
+SEMPRE AVANTE QUERO EU ANDAR, TÉ NO CÉU CHEGAR.
+
+Livre do pecado já estou. Do abismo me retirou
+Sobre a Rocha eterna me firmou; Glória a meu Jesus!
+
+Divinal louvor Jesus me deu; Harmonia que vem do céu;
+Cantarei, alegre, Cristo é meu, Glória a meu Jesus!
+
+Esta nova hei de proclamar; Muitos hão de assim chegar,
+E a glória receber, sem par. Glória a meu Jesus!`
+            },
+            15: {
+                number: 15,
+                title: "Conversão",
+                suggestedTone: "E",
+                lyrics: `Oh! quão cego andei e perdido vaguei, Longe, longe do meu Salvador!
+Mas do céu Ele desceu e Seu sangue verteu P'ra salvar um tão pobre pecador.
+
+[REFRÃO]
+FOI NA CRUZ, FOI NA CRUZ, ONDE UM DIA EU VI MEU PECADO CASTIGADO EM JESUS;
+FOI ALI, PELA FÉ, QUE OS OLHOS ABRI, E AGORA ME ALEGRO EM SUA LUZ.
+
+Eu ouvia falar dessa graça sem par, Que do céu trouxe nosso Jesus;
+Mas eu surdo me fiz, converter-me não quis Ao Senhor, que por mim morreu na cruz.
+
+Mas um dia senti meu pecado, e vi Sobre mim a espada da lei;
+Apressado fugi, em Jesus me escondi, E abrigo seguro nEle achei.
+
+Quão ditoso, então, este meu coração, Conhecendo o excelso amor
+Que levou meu Jesus a sofrer lá na cruz, P'ra salvar a um tão pobre pecador.`
+            },
+            16: {
+                number: 16,
+                title: "Despertar Para o Trabalho",
+                suggestedTone: "F",
+                lyrics: `Posso tendo as mãos vazias, Com Jesus eu me encontrar?
+Nada fiz, e vão-se os dias Que Lhe posso apresentar?
+
+[REFRÃO]
+POSSO TENDO AS MÃOS VAZIAS, COM JESUS, EU ME ENCONTRAR?
+QUANTAS ALMAS PODERIA AO SENHOR APRESENTAR?
+
+Não mais temerei a morte; Vencerei, por salvo estar;
+Qual será a minha sorte, Se no céu vazio entrar?
+
+No celeste lar entrando, Como irei ao Salvador?
+Quantas almas irei levando, Para meu fiel Senhor?
+
+Do pecado, preso em elos, Passei anos em vão labor;
+Quem me dera reavê-los, P'ra servir ao meu Senhor.
+
+Despertemos, já é dia; Trabalhemos, com fervor;
+E levemos, com alegria, Muitas almas ao Senhor.`
+            },
+            17: {
+                number: 17,
+                title: "Pensando Em Jesus",
+                suggestedTone: "G",
+                lyrics: `Nas horas que passo pensando em Jesus As trevas desfaço, buscando a luz;
+Que horas de vida, tão doces p'pra mim, Jesus me convida, que eu suba p'ra Si!
+
+Da vida voando, sem nenhum temor; Acima buscando do véu o amor
+Que doce ventura, que aspecto feliz, Que nova natura minh'alma bendiz.
+
+Do mar o bramido, da brisa o langor, Da ave o carpido de doce amor,
+Me falam sentidos acordes dos céus, Me trazem aos ouvidos os hinos de Deus!
+
+Minh'alma ansiosa já quer percorrer A senda gloriosa que eu hei de ver;
+Que coisa tão bela; oh! que luz sem véu! Jesus me revela mistérios do céu.`
+            },
+            18: {
+                number: 18,
+                title: "Grata Nova",
+                suggestedTone: "Eb",
+                lyrics: `Grata nova Deus proclama Hoje, ao mundo pecador!
+Doce nova revelada, Lá na cruz do Salvador;
+Cego e desviado, o homem, Dos caminhos do Senhor,
+Desconhece e desconfia Deste Deus, o Deus de amor.
+
+[REFRÃO]
+GRATA NOVA, DOCE NOVA, VEM DOS LÁBIOS DO SENHOR;
+ESCUTAI COM ALEGRIA: "DEUS É LUZ, DEUS É AMOR"
+
+Com ofertas e obras mortas, Sacrifícios sem valor,
+Enganado, pensa o homem, Propiciar Seu Criador,
+Meios de salvar-se inventa; Clama, roga em seu favor,
+A supostos mediadores, Desprezando o Deus de amor.
+
+Luz divina, resplandece! Mostra ao triste pecador,
+Que na cruz estão unidos A justiça e o amor.
+Fala aos corações feridos, Mostra-te, Deus Salvador;
+E sem fim, proclamaremos: "Deus é luz, Deus é amor"`
+            },
+            19: {
+                number: 19,
+                title: "O Convite De Cristo",
+                suggestedTone: "F",
+                lyrics: `Eis a voz de Cristo clama, Sobre o revoltoso mar
+Desta vida perigosa: "Vinde em Mim vos abrigar".
+
+Quando outrora em Galiléia, Essa doce voz soou,
+Logo, o coração ouvinte, Tudo, pronto, abandonou.
+
+Sobre as vozes sedutoras, De mundanas atrações,
+Clama a meiga voz de Cristo: "Dai-me vossos corações!"
+
+Quer no meio dos prazeres, Quer no dia da aflição
+Inda clama, paciente: "Amas-Me tu, ó cristão?"
+
+Na vereda estreita e santa, Já pisada por Jesus,
+A segui-Lo Ele te chama: "Vem, cristão, andar na luz!"`
+            },
+            20: {
+                number: 20,
+                title: "Olhai p'ra o Cordeiro de Deus",
+                suggestedTone: "G",
+                lyrics: `Livres de pecado vós quereis ficar? Olhai p'ra o Cordeiro de Deus!
+Ele morto foi na cruz p'ra vos salvar; Olhai p'ra o Cordeiro de Deus!
+
+[REFRÃO]
+OLHAI P'RA O CORDEIRO DE DEUS, OLHAI P'RA O CORDEIRO DE DEUS
+PORQUE SÓ ELE VOS PODE SALVAR. OLHAI P'RA O CORDEIRO DE DEUS!
+
+Se estais tentados, em hesitação, Olhai p'ra o Cordeiro de Deus!
+Ele encherá o vosso coração, Olhai p'ra o Cordeiro de Deus!
+
+Se estais cansados e sem mais vigor, Olhai p'ra o Cordeiro de Deus!
+Ele vos quer dar Seu divinal amor, Olhai p'ra o Cordeiro de Deus!`
+            },
+            21: {
+                number: 21,
+                title: "Gloriosa Aurora",
+                suggestedTone: "F",
+                lyrics: `A gloriosa aurora vem, Do dia em que lá em Belém Nasceu de Deus, o Filho;
+Que belo dia e de luz, No qual p'ra nós desceu Jesus, Do céu mostrando o trilho.
+Quantos santos hoje lembram, E relembram a história
+De Jesus, o Rei da Glória!
+
+Nasceu Jesus lá em Belém, Trazendo-nos o sumo bem Do céu a liberdade;
+Nos concedeu perfeita paz, Consolação que satisfaz Por toda a eternidade!
+Como fomos desgarrados, Desviados e perdidos!
+Hoje somos redimidos!
+
+Conosco Cristo habitará Com Seu poder nos velará, Nos dando livramento;
+E sempre há de nos guiar Pois Sua graça vai nos dar Em todo o sofrimento.
+Escuta: Luta sempre forte, Té a morte, pois ajuda
+Tens em Cristo, que não muda!`
+            },
+            22: {
+                number: 22,
+                title: "Ceia Do Senhor",
+                suggestedTone: "C",
+                lyrics: `Em nossa alma nós tomamos O teu corpo, ó Jesus
+Como oferta voluntária, Que nos deste lá na cruz.
+
+[REFRÃO]
+COMO PÃO DO CÉU DESCESTE, VAMOS A TI RECEBER,
+POIS UNIDOS AO TEU CORPO, NÓS QUEREMOS, SIM, VIVER.
+
+Em figura, o Teu sangue Nós bebemos, ó Senhor,
+Pois só nEle há virtude P'ra salvar o pecador.
+
+Vem, concede à Tua Igreja O perdão do Teu amor,
+Para que nos dois emblemas, Contemplemos-Te, Senhor.
+
+O Senhor, por Teu Espírito Em nós vem já residir,
+P'ra Teu corpo e Teu sangue Nós podermos discernir.`
+            },
+            23: {
+                number: 23,
+                title: "Glória A Jesus",
+                suggestedTone: "G",
+                lyrics: `Cantam os santos com fervor, A Quem por mim foi imolado,
+Na cruz, sofrendo o meu pecado.
+
+[REFRÃO]
+GLÓRIA A JESUS! GLÓRIA A JESUS!
+GLÓRIA A JESUS, O SALVADOR!
+
+Deus é o Justificador De quem crer no Seu Enviado,
+Sim, no Seu Filho mui amado.
+
+Do Seu Pai recebeu louvor, E com poder foi exaltado,
+Por isso é glorificado.
+
+Do "Sangue Purificador", Eu quero sempre ter lembrança
+E nEle ter mais confiança.`
+            },
+            24: {
+                number: 24,
+                title: "Poder Pentecostal",
+                suggestedTone: "F",
+                lyrics: `No Pentecostes sucedeu O que Jesus falou,
+Pois de repente lá do céu Um vento assoprou,
+Que veio a casa toda encher E os corações com mui poder.
+
+[REFRÃO]
+PODER, PODER, PODER PENTECOSTAL. Ó VEM NOS INFLAMAR,
+TAMBÉM NOS RENOVAR; Ó VEM, SIM, VEM, Ó CHAMA DIVINAL,
+TEUS SERVOS BATIZAR.
+
+Em cada um veio repousar A preciosa luz,
+O Preceptor que veio ficar Co'os servos de Jesus;
+Foi o fogo santo do Senhor, Que os encheu com Seu vigor.
+
+E começaram a falar, Repletos de poder,
+Em outras línguas exaltar Ao que mandou trazer
+Os ricos dons do Seu amor E o poder consolador.`
+            },
+            25: {
+                number: 25,
+                title: "Jesus, Tu És Bom",
+                suggestedTone: "C",
+                lyrics: `Meu Jesus, Tu és bom; Tu és tudo p'ra mim!
+Foste morto, mas vives em mim; Tu mereces louvor,
+O Cordeiro de Deus! Tu és tudo, sim, tudo p'ra mim!
+
+Quero a Ti dar louvor, Pois és Rei sobre reis;
+Tu és tudo, mas nada eu sou; Enche meu coração
+De ternura e paz. Honra eterna e glória Te dou.
+
+O Teu Nome é amor, Pois Tu amas a mim,
+E eu quero andar neste amor; Triunfante estou,
+Confiando em Ti, Meu Jesus, grande Consolador.`
+            },
+            26: {
+                number: 26,
+                title: "A Formosa Jerusalém",
+                suggestedTone: "G",
+                lyrics: `Quão glorioso, cristão, é pensares Na cidade que não tem igual,
+Onde os muros são de puro jaspe, E as ruas de ouro e cristal;
+Pensa como será glorioso Ver-se a triunfal multidão,
+Que cantando, aguarda a chegada Dos que vencem a tribulação.
+
+Pensa como será glorioso Ver o rio da vida e luz,
+Cujas margens juncadas de lírios, São a glória de nosso Jesus;
+Haverá lá perpétua aurora, Pois Deus mesmo a alumiará;
+E o Cordeiro, com Sua esposa, Noite e dia resplandecerá.
+
+Pensa na celestial melodia Que a terra encherá, de Beulá;
+E das harpas a doce harmonia Ao passar o Jordão se ouvirá.
+Mesmo em dores que levem à morte, Sê constante, não voltes atrás,
+Tua herança, tua eterna sorte, É Jesus, o Fiel, o Veraz.`
+            },
+            27: {
+                number: 27,
+                title: "Amor Que Vence",
+                suggestedTone: "D",
+                lyrics: `Amor, que por amor desceste! Amor, que por amor morreste!
+Ah! quanta dor não padeceste, Meu coração p'ra conquistar,
+E meu amor ganhar!
+
+Amor, que com amor seguias! A mim, que sem amor Tu vias!
+Oh! quanto amor por mim sentias, Meu Salvador, meu bom Jesus,
+Sofrendo sobre a cruz!
+
+Amor, que tudo me perdoas! Amor, que até mesmo abençoas!
+Um réu de quem Te afeiçoas! Por Ti vencido, ó Salvador,
+Eis-me aos Teus pés, Senhor!`
+            },
+            28: {
+                number: 28,
+                title: "Deus Vai Te Guiar",
+                suggestedTone: "F",
+                lyrics: `Andas carregado de tristeza e dor, Sem nenhum auxílio, nem um Salvador?
+Ouve a mensagem de teu bom Jesus, E tem mais coragem, leva a tua cruz.
+
+[REFRÃO]
+DEUS VAI TE GUIAR COM SUA FORTE MÃO; PODES DESCANSAR NA TRIBULAÇÃO;
+SEJA TUA VIDA LIVRE DE PESAR; EM TRISTEZA E LIDA DEUS VAI TE GUIAR.
+
+Toda carga por ti Ele quer levar; Alma dolorida, ouve o Seu falar;
+Senda espinhosa Ele já andou, Morte afrontosa por ti suportou.
+
+Se estás tentado Deus te ajudará, Sempre confiando, te libertará;
+As pisadas segue do teu Salvador, Crendo em Deus, prossegue, seja como for.`
+            },
+            29: {
+                number: 29,
+                title: "O Precioso Sangue",
+                suggestedTone: "G",
+                lyrics: `Oh! que precioso sangue, Meu Senhor verteu,
+Quando, para resgatar-nos, Padeceu!
+
+Oh! que precioso sangue, Sangue de Jesus,
+Que por nós, foi derramado Sobre a cruz!
+Oh! que precioso sangue, Sangue remidor!
+Sim, com este nos remiste, Redentor!
+
+Oh! que precioso sangue, Sangue expiador!
+Eis o que da pena livra O malfeitor!`
+            },
+            30: {
+                number: 30,
+                title: "Não Sou Meu",
+                suggestedTone: "Ab",
+                lyrics: `Não sou meu! Por Cristo salvo, Que por mim morreu na cruz,
+Eu confesso alegremente, Que pertenço ao bom Jesus.
+
+[REFRÃO]
+NÃO SOU MEU! OH! NÃO SOU MEU! BOM JESÚS, SOU TODO TEU!
+HOJE MESMO E PARA SEMPRE, BOM JESÚS, SOU TODO TEU!
+
+Não sou meu! Por Ele remido, Quando o sangue derramou;
+Na Sua graça confiando, Que minh'alma resgatou.
+
+Jamais meu! A Ti confio Tudo quanto chamo meu;
+Tudo nas Tuas mãos entrego; Meu Senhor, sou todo Teu!`
+            },
+            36: {
+                number: 36,
+                title: "O Exilado",
+                suggestedTone: "G",
+                lyrics: `Da linda Pátria estou bem longe; Cansado estou;
+Eu tenho de Jesus saudade, Oh, quando é que eu vou?
+Passarinhos, belas flores, Querem m'encantar;
+São vãos terrestres esplendores, Mas contemplo o meu Lar.
+
+Jesus me deu a Sua promessa; Me vem buscar;
+Meu coração está com pressa, Eu quero já voar.
+Meus pecados foram muitos, Mui culpado sou;
+Porém, Seu sangue põe-me limpo; Eu para Pátria vou.
+
+Qual filho de seu lar saudoso, Eu quero ir;
+Qual passarinho para o ninho, P'ra os braços Seus fugir;
+É fiel - Sua vinda é certa, Quando... Eu não sei.
+Mas Ele manda estar alerta; Do exílio voltarei.`
+            },
+            39: {
+                number: 39,
+                title: "Alvo Mais Que a Neve",
+                suggestedTone: "A",
+                lyrics: `Bendito seja o Cordeiro Que na cruz por nós padeceu!
+Bendito seja o Seu sangue, Que por nós, ali Ele verteu!
+Eis nesse sangue lavados, Com roupas que tão alvas são,
+Os pecadores remidos, Que perante seu Deus já estão!
+
+[REFRÃO]
+ALVO MAIS QUE A NEVE! ALVO MAIS QUE A NEVE!
+SIM, NESSE SANGUE LAVADO, MAIS ALVO QUE A NEVE SEREI.
+
+Quão espinhosa a coroa Que Jesus por nós suportou!
+Oh! Quão profundas as chagas, Que nos provam quanto Ele amou!
+Eis nessas chagas pureza Para o maior pecador!
+Pois que mais alvo que a neve, O Teu sangue nos torna, Senhor!
+
+Se nós a Ti confessarmos, E seguirmos na Tua luz,
+Tu não somente perdoas, Purificas também, ó Jesus;
+Sim, e de todo o pecado! Que maravilha de amor!
+Pois que mais alvo que a neve, O Teu sangue nos torna, Senhor.`
+            },
+            43: {
+                number: 43,
+                title: "Doce Lar",
+                suggestedTone: "Ab",
+                lyrics: `Na Pátria celeste, de Deus o doce lar,
+Prepara Jesus, para os Seus, um lugar,
+Pois longe do mal, do pecado e da dor
+Consigo p'ra sempre os quer ter seu Senhor.
+
+[REFRÃO]
+OH! DOCE, DOCE LAR!
+ALÍ, COM JESUS, VOU PARA SEMPRE DESCANSAR.
+
+Oh! lar sacrossanto de paz e de amor!
+Ali, sobre o trono, verei meu Senhor,
+O meigo Cordeiro, reinando em luz,
+Por todos louvado, bendito Jesus!`
+            },
+            46: {
+                number: 46,
+                title: "Um Pendão Real",
+                suggestedTone: "Bb",
+                lyrics: `Um pendão real vos entregou o Rei
+A vós, soldados Seus;
+Corajosos, pois, em tudo O defendei,
+Marchando para os céus.
+
+[REFRÃO]
+COM VALOR! SEM TEMOR! POR CRISTO PRONTOS A SOFRER!
+BEM ALTO ERGUEI O SEU PENDÃO, FIRMES SEMPRE, ATÉ MORRER!
+
+Eis formados já os negros batalhões
+Do grande Usurpador!
+Declarai-vos, hoje, bravos campeões;
+Avante sem temor.`
+            },
+            47: {
+                number: 47,
+                title: "Rocha Eterna",
+                suggestedTone: "F",
+                lyrics: `Rocha eterna, meu Jesus, Que, por mim, na amarga cruz,
+Foste morto em meu lugar, Morto para me salvar;
+Em Ti quero me esconder, Só Tu podes me valer.
+
+Minhas obras, eu bem sei, Nada valem ante a lei;
+Se eu chorasse sem cessar, Trabalhasse sem cansar,
+Tudo inútil, tudo em vão! Só em Ti há salvação.
+
+Nada trago a ti, Senhor! Esperto só em Teu amor!
+Todo indigno e imundo sou, Eis, sem Ti, perdido estou!
+No Teu sangue, ó Salvador, Lava um pobre pecador.`
+            },
+            50: {
+                number: 50,
+                title: "Sempre Fiéis",
+                suggestedTone: "G",
+                lyrics: `Sempre fiéis, sim, a Ti, nós seremos,
+Por Tua graça, ó Cristo Senhor!
+Sempre fiéis, sim, por Ti lutaremos,
+Sob Teu pendão, ó Jesus, Salvador!
+
+[REFRÃO]
+SEMPRE FIÉIS, IRMÃOS! IRMÃOS SEJAMOS,
+SEMPRE FIÉIS A CRISTO JESUS,
+QUE ATÉ À MORTE, POR NÓS PROSSEGUIU,
+E LIBERTOU-NOS, MORRENDO NA CRUZ!
+
+Por Ti viver, ó bendito Cordeiro,
+Quem não deseja - se Te conhecer?
+Quem, que se diga cristão verdadeiro,
+Pronto não esteja, por Ti a sofrer?`
+            },
+            52: {
+                number: 52,
+                title: "Tudo Está Bem",
+                suggestedTone: "F",
+                lyrics: `Pelo amor de Deus bendito, Vai tudo bem!
+Seu amor é infinito: Tudo está bem!
+Esse amor nos tem provado, Em Seu Filho muito amado,
+Que, por nós, foi imolado. Sim, sim, está bem!
+
+Cristo, agora, o cetro empunha: Vai tudo bem!
+Quem morreu é quem governa: Tudo está bem!
+Seu amor é imutável, Seu poder inabalável,
+Seu cuidado é incansável. Sim, sim, está bem!
+
+A fé canta na tristeza: Vai tudo bem!
+Canta, sim, e com divisão: Tudo está bem!
+Pois se Deus é quem nos guia, Ternamente nos vigia,
+Com bondade, noite e dia. Sim, sim, está bem!`
+            },
+            77: {
+                number: 77,
+                title: "Guarda o Contacto",
+                suggestedTone: "G",
+                lyrics: `Queres, neste mundo, ser um vencedor? Queres tu cantar nas lutas e na dor?
+Queres ser alegre, qual bom lutador? Guarda o contacto com teu Salvador!
+
+[REFRÃO]
+GUARDA O CONTACTO COM TEU SALVADOR, E A NUVEM DO MAL NÃO TE COBRIRÁ
+PELA SENDA ALEGRE, TU CAMINHARÁS INDO EM CONTACTO COM TEU SALVADOR.
+
+Neste mundo, vivem muitos a penar, Cujos corações transbordam de pesar;
+Dá-lhes a mensagem de amor sem par; Com Deus o contacto deves tu guardar!
+
+Deixa que o Espírito implante em teu ser, O amor de Cristo, divinal prazer;
+Queres, neste mundo, todo o mal vencer? Guarda o contacto e terás poder!`
+            },
+            100: {
+                number: 100,
+                title: "O Bom Consolador",
+                suggestedTone: "A",
+                lyrics: `Quem quer ir, por Jesus, a nova proclamar
+Nos antros de aflição, misérias, mal e dor?
+Cristãos, anunciai que o Pai quer derramar O bom Consolador.
+
+[REFRÃO]
+O BOM CONSOLADOR, O BOM CONSOLADOR
+QUE DEUS NOS PROMETEU AO MUNDO JÁ DESCEU;
+O IDE PROCLAMAR, QUE DEUS QUER DERRAMAR O BOM CONSOLADOR.
+
+No mundo de horror, a luz, enfim, brilhou
+Que veio dissipar as sombras de terror;
+Também o nosso Pai, aos Seus fiéis mandou O bom Consolador.
+
+É o Consolador que traz a salvação
+Aos que aprisionou o grande Tentador;
+Dizei que veio já, com todo o coração, O bom Consolador.`
+            },
+            115: {
+                number: 115,
+                title: "Trabalhai e Orai",
+                suggestedTone: "F",
+                lyrics: `Eu quero trabalhar p'ra meu Senhor, Levando a Palavra com amor;
+Quero eu cantar e orar, E ocupado quero estar, Sim, na vinha do Senhor.
+
+[REFRÃO]
+TRABALHAI E ORAI, NA SEARA E NA VINHA DO SENHOR;
+MEU DESEJO É ORAR, E OCUPADO QUERO ESTAR SIM, NA VINHA DO SENHOR.
+
+Eu quero, cada dia, trabalhar; Escravos do pecado libertar;
+Conduzi-los a Jesus, Nosso Guia, nossa Luz, Sim, na vinha do Senhor.
+
+Eu quero ser obreiro de valor Confiando no poder do Salvador;
+Se quiseres trabalhar, Acharás também lugar, Sim, na vinha do Senhor.`
+            },
+            120: {
+                number: 120,
+                title: "Noite de Paz",
+                suggestedTone: "C",
+                lyrics: `Noite de paz, noite de amor; Tudo dorme, em derredor!
+Entre os astros que espargem a luz
+Bela, indicando o menino Jesus, Brilha a estrela da paz,
+Brilha a estrela da paz.
+
+Noite de paz, noite de amor; Ouve o fiel pastor
+Coros celestes que cantam a paz, Que nesta noite sublime nos traz,
+O nosso bom Redentor,
+O nosso bom Redentor.`
+            },
+            187: {
+                number: 187,
+                title: "Mais Perto, Meu Deus, de Ti!",
+                suggestedTone: "G",
+                lyrics: `Mais perto quero estar Meu Deus, de Ti!
+Inda que seja a dor Que me una a Ti,
+Sempre hei de suplicar: Mais perto quero estar,
+Mais perto quero estar, Meu Deus, de Ti!
+
+Andando triste, aqui Na solidão,
+Paz e descanso a mim Teus braços dão;
+Nas trevas vou sonhar: Mais perto quero estar,
+Mais perto quero estar, Meu Deus, de Ti!
+
+Minh'alma cantará A Ti, Senhor,
+E em Betel alçará Padrão de amor,
+Eu sempre hei de rogar: Mais perto quero estar,
+Mais perto quero estar, Meu Deus, de Ti!`
+            },
+            212: {
+                number: 212,
+                title: "Os Guerreiros Se Preparam",
+                suggestedTone: "G",
+                lyrics: `Os guerreiros se preparam para a grande luta
+E Jesus, o Capitão, que avante os levará.
+A milícia dos remidos marcha impoluta;
+Certa que vitória alcançará!
+
+[REFRÃO]
+EU QUERO ESTAR COM CRISTO, ONDE A LUTA SE TRAVAR,
+NO LANCE IMPREVISTO NA FRENTE M'ENCONTRAR.
+ATÉ QUE O POSSA VER NA GLÓRIA, SE ALEGRANDO DA VITÓRIA
+ONDE DEUS VAI ME COROAR!
+
+Eis os batalhões de Cristo prosseguindo avante,
+Não os vês com que valor combatem contra o mal?
+Podes tu ficar dormindo, mesmo vacilante,
+Quando atacam outros a Belial?
+
+Dá-te pressa, não vaciles, hoje Deus te chama
+Para vires pelejar ao lado do Senhor;
+Entra na batalha onde mais o fogo inflama, E peleja contra o vil tentador!`
+            },
+            291: {
+                number: 291,
+                title: "A Mensagem da Cruz",
+                suggestedTone: "F",
+                lyrics: `Rude cruz se ergueu, bem longe de nós, Como emblema de vergonha e dor;
+Mas eu amo essa cruz onde Cristo Jesus, Deu Sua vida por mim, pecador.
+
+[REFRÃO]
+Sim, eu amo a mensagem da cruz, Até morrer eu a proclamarei;
+E abraçado à cruz do meu mestre Jesus, Pela coroa de glória a trocarei!
+
+Nessa cruz padeceu o Filho de Deus, Suportando a nossa condenação;
+Mas agora Ele vive e reina no céu, Garantindo-nos plena salvação.`
+            }
+        };
+
+        // ------------------ SETUP DO FIREBASE ------------------
+        const defaultAppId = 'JesseHarpa';
+        let appId = defaultAppId;
+        let firebaseConfig = null;
+
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) {
+            console.error("Erro ao analisar __firebase_config:", e);
+        }
+
+        if (!firebaseConfig) {
+            const savedConfig = localStorage.getItem('harpa_firebase_config');
+            if (savedConfig) {
+                try {
+                    firebaseConfig = JSON.parse(savedConfig);
+                } catch(e) {
+                    console.error("Erro ao recuperar configuração salva:", e);
+                }
+            }
+        }
+
+        if (!firebaseConfig) {
+            firebaseConfig = {
+                apiKey: "AIzaSyClgsJLDVQXlZ6XkbXaDjA2asvzV8EbkOg",
+  		authDomain: "jesse-harpa-db.firebaseapp.com",
+  		projectId: "jesse-harpa-db",
+  		storageBucket: "jesse-harpa-db.firebasestorage.app",
+  		messagingSenderId: "1038246336313",
+  		appId: "1:1038246336313:web:01158c4310ab2f45bb3ae8"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let localAnonymousId = localStorage.getItem('harpa_sync_user_id');
+        if (!localAnonymousId) {
+            localAnonymousId = 'ANON-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            localStorage.setItem('harpa_sync_user_id', localAnonymousId);
+        }
+
+        let syncUserId = localAnonymousId;
+        const googleProvider = new GoogleAuthProvider();
+
+        // ------------------ ESTADO GLOBAL DO APLICATIVO ------------------
+        let currentHymns = { ...OFICIAL_HYMNS_DB };
+        let activeHymnId = 1;
+        let activeTab = 'all'; // 'all' | 'favs' | 'notes'
+        let favorites = {};
+        let favoritesOrder = [];
+        let notes = {};
+        let userHymns = {};
+        let currentUser = null;
+        let metronomeInterval = null;
+        let isMetronomePlaying = false;
+
+        let unsubFavs = null;
+        let unsubNotes = null;
+        let unsubCustomHymns = null;
+
+        // ------------------ COMPONENTES DA INTERFACE ------------------
+        const elements = {
+            sidebar: document.getElementById('sidebar'),
+            sidebarOverlay: document.getElementById('sidebarOverlay'),
+            btnToggleSidebar: document.getElementById('btnToggleSidebar'),
+            hymnList: document.getElementById('hymnList'),
+            searchInput: document.getElementById('searchInput'),
+            tabAll: document.getElementById('tabAll'),
+            tabFavs: document.getElementById('tabFavs'),
+            tabNotes: document.getElementById('tabNotes'),
+            fontSizeSlider: document.getElementById('fontSizeSlider'),
+            btnHeaderNewHymn: document.getElementById('btnHeaderNewHymn'),
+            
+            userLoggedOut: document.getElementById('userLoggedOut'),
+            userLoggedIn: document.getElementById('userLoggedIn'),
+            btnGoogleLogin: document.getElementById('btnGoogleLogin'),
+            btnGoogleLogout: document.getElementById('btnGoogleLogout'),
+            userAvatar: document.getElementById('userAvatar'),
+            userName: document.getElementById('userName'),
+            
+            currentHymnNumber: document.getElementById('currentHymnNumber'),
+            currentHymnTitle: document.getElementById('currentHymnTitle'),
+            hymnText: document.getElementById('hymnText'),
+            btnFavorite: document.getElementById('btnFavorite'),
+            btnEditHymn: document.getElementById('btnEditHymn'),
+            hymnLoaderOverlay: document.getElementById('hymnLoaderOverlay'),
+            
+            suggestedToneBadge: document.getElementById('suggestedToneBadge'),
+            displaySuggestedTone: document.getElementById('displaySuggestedTone'),
+            displaySuggestedToneMobile: document.getElementById('displaySuggestedToneMobile'),
+            
+            nInitBadge: document.getElementById('nInitBadge'),
+            displayNInit: document.getElementById('displayNInit'),
+            displayNInitMobile: document.getElementById('displayNInitMobile'),
+            mobileSuggestedToneSpan: document.getElementById('mobileSuggestedToneSpan'),
+            mobileNInitSpan: document.getElementById('mobileNInitSpan'),
+            
+            notesDrawer: document.getElementById('notesDrawer'),
+            notesOverlay: document.getElementById('notesOverlay'),
+            btnOpenNotes: document.getElementById('btnOpenNotes'),
+            btnCloseNotes: document.getElementById('btnCloseNotes'),
+            notesCountBadge: document.getElementById('notesCountBadge'),
+            notesArea: document.getElementById('notesArea'),
+            saveStatus: document.getElementById('saveStatus'),
+            connectionStatus: document.getElementById('connectionStatus'),
+            
+            btnToggleMetronome: document.getElementById('btnToggleMetronome'),
+            metronomeBpm: document.getElementById('metronomeBpm'),
+            bpmDisplay: document.getElementById('bpmDisplay'),
+            
+            editModal: document.getElementById('editModal'),
+            btnCloseEditModal: document.getElementById('btnCloseEditModal'),
+            btnCancelEdit: document.getElementById('btnCancelEdit'),
+            btnSaveHymn: document.getElementById('btnSaveHymn'),
+            btnRestoreOriginal: document.getElementById('btnRestoreOriginal'),
+            editHymnNumber: document.getElementById('editHymnNumber'),
+            editHymnTitle: document.getElementById('editHymnTitle'),
+            editHymnLyrics: document.getElementById('editHymnLyrics'),
+            editHymnSuggestedTone: document.getElementById('editHymnSuggestedTone'), 
+            editHymnNInit: document.getElementById('editHymnNInit'), 
+            modalTitle: document.getElementById('modalTitle'),
+            
+            confirmModal: document.getElementById('confirmModal'),
+            btnConfirmCancel: document.getElementById('btnConfirmCancel'),
+            btnConfirmOk: document.getElementById('btnConfirmOk'),
+            confirmTitle: document.getElementById('confirmTitle'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            
+            toastContainer: document.getElementById('toastContainer')
+        };
+
+        // ------------------ AUTENTICAÇÃO E INICIALIZAÇÃO ------------------
+        const initAuthAndSync = async () => {
+            try {
+                updateConnectionUI('Conectando...', 'text-amber-600', 'fa-spinner fa-spin');
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                }
+            } catch (error) {
+                console.error("Erro na inicialização de autenticação:", error);
+                updateConnectionUI('Modo Local', 'text-amber-500', 'fa-triangle-exclamation');
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            
+            if (user && !user.isAnonymous) {
+                syncUserId = user.uid;
+                
+                elements.userLoggedOut.classList.add('hidden');
+                elements.userLoggedIn.classList.remove('hidden');
+                elements.userAvatar.src = user.photoURL || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+                elements.userName.textContent = user.displayName || "Usuário Google";
+                
+                updateConnectionUI('Sincronizado (Google)', 'text-emerald-500', 'fa-circle-check');
+                showToast(`Bem-vindo, ${user.displayName || 'Irmão'}!`, 'success');
+            } else {
+                syncUserId = localAnonymousId;
+                
+                elements.userLoggedIn.classList.add('hidden');
+                elements.userLoggedOut.classList.remove('hidden');
+                
+                updateConnectionUI('Ativa (Anônimo)', 'text-blue-500', 'fa-circle-check');
+                
+                if (!user) {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch(e) {
+                        console.error("Falha no login anônimo silencioso:", e);
+                    }
+                }
+            }
+            startFirestoreSync();
+        });
+
+        elements.btnGoogleLogin.onclick = async () => {
+            try {
+                updateConnectionUI('Autenticando...', 'text-amber-600', 'fa-spinner fa-spin');
+                await signInWithPopup(auth, googleProvider);
+            } catch (error) {
+                console.error("Erro ao fazer login com o Google:", error);
+                showToast("Falha no login com o Google. Tente novamente.", "error");
+                updateConnectionUI('Ativa (Anônimo)', 'text-blue-500', 'fa-circle-check');
+            }
+        };
+
+        elements.btnGoogleLogout.onclick = () => {
+            showConfirmModal(
+                "Sair da Conta",
+                "Deseja realmente sair da sua conta Google neste dispositivo? Suas anotações continuarão seguras na nuvem do seu e-mail.",
+                async () => {
+                    try {
+                        await signOut(auth);
+                        showToast("Sessão finalizada com sucesso.", "info");
+                    } catch (error) {
+                        console.error("Erro ao deslogar:", error);
+                    }
+                }
+            );
+        };
+
+        // ------------------ SINCRONIZAÇÃO EM TEMPO REAL (FIRESTORE) ------------------
+        const startFirestoreSync = () => {
+            if (unsubFavs) unsubFavs();
+            if (unsubNotes) unsubNotes();
+            if (unsubCustomHymns) unsubCustomHymns();
+
+            if (!currentUser) return;
+
+            const favDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'favorites', syncUserId);
+            const notesDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'notes', syncUserId);
+            const customHymnsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'customHymns', syncUserId);
+
+            unsubFavs = onSnapshot(favDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    favorites = docSnap.data().list || {};
+                    favoritesOrder = docSnap.data().order || [];
+                } else {
+                    favorites = {};
+                    favoritesOrder = [];
+                }
+                syncFavoritesOrder();
+                renderHymns();
+                updateHymnHeaderState();
+            }, (error) => {
+                console.error("Erro favoritos:", error);
+            });
+
+            unsubNotes = onSnapshot(notesDocRef, (docSnap) => {
+                notes = docSnap.exists() ? (docSnap.data().items || {}) : {};
+                if (notes[activeHymnId]) {
+                    elements.notesArea.value = notes[activeHymnId].text || "";
+                } else {
+                    elements.notesArea.value = "";
+                }
+                updateNotesBadge();
+                renderHymns();
+            }, (error) => {
+                console.error("Erro anotações:", error);
+            });
+
+            unsubCustomHymns = onSnapshot(customHymnsDocRef, (docSnap) => {
+                userHymns = docSnap.exists() ? (docSnap.data().items || {}) : {};
+                currentHymns = { ...OFICIAL_HYMNS_DB, ...userHymns };
+                renderHymns();
+                selectHymn(activeHymnId, false);
+            }, (error) => {
+                console.error("Erro hinos customizados:", error);
+            });
+        };
+
+        // ------------------ GRAVAÇÃO DE DADOS NO FIRESTORE ------------------
+        const saveFavoritesToCloud = async () => {
+            if (!currentUser) return;
+            try {
+                showSaveState('salvando...');
+                const favRef = doc(db, 'artifacts', appId, 'public', 'data', 'favorites', syncUserId);
+                await setDoc(favRef, { list: favorites, order: favoritesOrder });
+                showSaveState('salvo');
+            } catch (error) {
+                console.error("Erro ao salvar favoritos:", error);
+                showSaveState('erro ao salvar');
+            }
+        };
+
+        function syncFavoritesOrder() {
+            favoritesOrder = favoritesOrder.filter(id => favorites[id]);
+            Object.keys(favorites).forEach(id => {
+                const numId = Number(id);
+                if (favorites[id] && !favoritesOrder.includes(numId)) {
+                    favoritesOrder.push(numId);
+                }
+            });
+        }
+
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            this.classList.add('bg-blue-100', 'opacity-50');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (dragSrcEl !== this) {
+                const fromIndex = parseInt(dragSrcEl.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+                
+                const movedId = favoritesOrder.splice(fromIndex, 1)[0];
+                favoritesOrder.splice(toIndex, 0, movedId);
+                
+                saveFavoritesToCloud();
+                renderHymns();
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('bg-blue-100', 'opacity-50');
+            renderHymns();
+        }
+
+        const saveNotesToCloud = async () => {
+            if (!currentUser) return;
+            try {
+                showSaveState('salvando...');
+                const notesRef = doc(db, 'artifacts', appId, 'public', 'data', 'notes', syncUserId);
+                await setDoc(notesRef, { items: notes });
+                showSaveState('salvo');
+                updateNotesBadge();
+            } catch (error) {
+                console.error("Erro ao salvar anotações:", error);
+                showSaveState('erro ao salvar');
+            }
+        };
+
+        const saveCustomHymnsToCloud = async () => {
+            if (!currentUser) return;
+            try {
+                showSaveState('salvando...');
+                const customHymnsRef = doc(db, 'artifacts', appId, 'public', 'data', 'customHymns', syncUserId);
+                await setDoc(customHymnsRef, { items: userHymns });
+                showSaveState('salvo');
+            } catch (error) {
+                console.error("Erro ao salvar hinos:", error);
+                showSaveState('erro ao salvar');
+            }
+        };
+
+        // ------------------ FUNÇÕES DE INTERFACE DO STATUS ------------------
+        function updateConnectionUI(text, colorClass, iconClass) {
+            elements.connectionStatus.className = `font-semibold ${colorClass} flex items-center gap-1`;
+            elements.connectionStatus.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${text}`;
+        }
+
+        function showSaveState(stateText) {
+            elements.saveStatus.textContent = stateText;
+        }
+
+        function updateNotesBadge() {
+            const hasNote = !!(notes[activeHymnId] && notes[activeHymnId].text && notes[activeHymnId].text.trim() !== "");
+            if (hasNote) {
+                elements.notesCountBadge.classList.remove('hidden');
+            } else {
+                elements.notesCountBadge.classList.add('hidden');
+            }
+        }
+
+        // ------------------ GESTÃO DOS HINOS ------------------
+        function renderHymns() {
+            const query = elements.searchInput.value.toLowerCase().trim();
+            elements.hymnList.innerHTML = '';
+            
+            let sortedKeys;
+            if (activeTab === 'favs') {
+                sortedKeys = [...favoritesOrder];
+            } else {
+                sortedKeys = Object.keys(currentHymns).map(Number).sort((a, b) => a - b);
+            }
+            
+            let count = 0;
+            sortedKeys.forEach((number, index) => {
+                const hymn = currentHymns[number];
+                if (!hymn) return;
+                const isFavorite = !!favorites[number];
+                const hasNote = !!(notes[number] && notes[number].text && notes[number].text.trim() !== "");
+                
+                if (activeTab === 'favs' && !isFavorite) return;
+                if (activeTab === 'notes' && !hasNote) return;
+
+                const matchesSearch = number.toString().includes(query) || hymn.title.toLowerCase().includes(query);
+                if (query && !matchesSearch) return;
+
+                const item = document.createElement('div');
+                const dragClasses = activeTab === 'favs' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer';
+                item.className = `p-3.5 flex items-center justify-between border-b border-gray-100 transition-colors ${dragClasses} ${activeHymnId === number ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50'}`;
+                item.onclick = () => selectHymn(number);
+
+                if (activeTab === 'favs') {
+                    item.setAttribute('draggable', 'true');
+                    item.dataset.index = index;
+                    item.dataset.id = number;
+                    
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('drop', handleDrop);
+                    item.addEventListener('dragend', handleDragEnd);
+                }
+
+                const noteBadge = hasNote ? `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-pen-nib"></i></span>` : '';
+                const suggestedToneText = hymn.suggestedTone ? `<span class="text-xs text-gray-400 font-medium ml-1">Tom: ${hymn.suggestedTone}</span>` : '';
+                const nInitText = hymn.nInit ? `<span class="text-[10px] bg-amber-50 text-amber-800 px-1 rounded border border-amber-100 font-semibold">N.Init: ${hymn.nInit}</span>` : '';
+                const dragHandle = activeTab === 'favs' ? `<i class="fa-solid fa-grip-vertical text-gray-300 mr-2 select-none"></i>` : '';
+
+                item.innerHTML = `
+                    <div class="flex items-center min-w-0 flex-1">
+                        ${dragHandle}
+                        <div class="flex-1 min-w-0 pr-2">
+                            <div class="flex items-center gap-1.5 mb-0.5">
+                                <span class="text-xs font-bold text-blue-600">${number}</span>
+                                <h4 class="font-bold text-gray-800 truncate text-sm">${hymn.title}</h4>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                ${noteBadge}
+                                ${suggestedToneText}
+                                ${nInitText}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="toggleFavoriteInline(event, ${number})" class="text-sm focus:outline-none p-1 rounded-full hover:bg-gray-200">
+                            <i class="${isFavorite ? 'fa-solid fa-star text-yellow-500' : 'fa-regular fa-star text-gray-300'}"></i>
+                        </button>
+                    </div>
+                `;
+                elements.hymnList.appendChild(item);
+                count++;
+            });
+
+            if (count === 0) {
+                elements.hymnList.innerHTML = `<div class="p-6 text-center text-sm text-gray-400">Nenhum hino localizado.</div>`;
+            }
+        }
+
+        window.toggleFavoriteInline = (event, number) => {
+            event.stopPropagation();
+            favorites[number] = !favorites[number];
+            if (favorites[number]) {
+                if (!favoritesOrder.includes(number)) {
+                    favoritesOrder.push(number);
+                }
+            } else {
+                favoritesOrder = favoritesOrder.filter(id => id !== number);
+            }
+            saveFavoritesToCloud();
+            renderHymns();
+            if (number === activeHymnId) {
+                updateHymnHeaderState();
+            }
+        };
+
+        function selectHymn(number, closeSidebarOnMobile = true) {
+            activeHymnId = number;
+            const hymn = currentHymns[number];
+            if (!hymn) return;
+
+            if (closeSidebarOnMobile) {
+                elements.sidebar.classList.add('-translate-x-full');
+                elements.sidebarOverlay.classList.add('hidden');
+            }
+
+            elements.currentHymnNumber.textContent = `HINO ${String(number).padStart(2, '0')}`;
+            elements.currentHymnTitle.textContent = hymn.title;
+
+            if (hymn.suggestedTone && hymn.suggestedTone.trim() !== '') {
+                elements.suggestedToneBadge.classList.remove('hidden');
+                elements.displaySuggestedTone.textContent = hymn.suggestedTone;
+                elements.displaySuggestedToneMobile.textContent = hymn.suggestedTone;
+                if (elements.mobileSuggestedToneSpan) elements.mobileSuggestedToneSpan.classList.remove('hidden');
+            } else {
+                elements.suggestedToneBadge.classList.add('hidden');
+                if (elements.mobileSuggestedToneSpan) elements.mobileSuggestedToneSpan.classList.add('hidden');
+            }
+
+            if (hymn.nInit && hymn.nInit.trim() !== '') {
+                elements.nInitBadge.classList.remove('hidden');
+                elements.displayNInit.textContent = hymn.nInit;
+                elements.displayNInitMobile.textContent = hymn.nInit;
+                if (elements.mobileNInitSpan) elements.mobileNInitSpan.classList.remove('hidden');
+            } else {
+                elements.nInitBadge.classList.add('hidden');
+                if (elements.mobileNInitSpan) elements.mobileNInitSpan.classList.add('hidden');
+            }
+
+            const lines = hymn.lyrics.split('\n');
+            let lyricsHTML = '';
+            let isInsideChorus = false;
+
+            lines.forEach(line => {
+                const cleanedLine = line.trim();
+                if (cleanedLine === '[REFRÃO]' || cleanedLine === '[CORO]') {
+                    isInsideChorus = true;
+                    return;
+                }
+                
+                if (cleanedLine === '') {
+                    isInsideChorus = false;
+                    lyricsHTML += '<div class="h-4"></div>';
+                    return;
+                }
+
+                if (isInsideChorus) {
+                    lyricsHTML += `<p class="refrao">${cleanedLine}</p>`;
+                } else {
+                    lyricsHTML += `<p class="mb-1.5 text-gray-700 font-medium">${cleanedLine}</p>`;
+                }
+            });
+
+            elements.hymnText.innerHTML = lyricsHTML;
+
+            const savedNote = notes[number] || {};
+            elements.notesArea.value = savedNote.text || '';
+
+            updateHymnHeaderState();
+            updateNotesBadge();
+            renderHymns();
+        }
+
+        function updateHymnHeaderState() {
+            const isFav = !!favorites[activeHymnId];
+            elements.btnFavorite.innerHTML = isFav ? '<i class="fa-solid fa-star text-yellow-500"></i>' : '<i class="fa-regular fa-star text-gray-400"></i>';
+        }
+
+        // ------------------ CONTROLE DA GAVETA DE ANOTAÇÕES ------------------
+        elements.btnOpenNotes.onclick = () => {
+            elements.notesDrawer.classList.remove('translate-x-full');
+            elements.notesOverlay.classList.remove('hidden');
+        };
+
+        const closeNotesDrawer = () => {
+            elements.notesDrawer.classList.add('translate-x-full');
+            elements.notesOverlay.classList.add('hidden');
+        };
+
+        elements.btnCloseNotes.onclick = closeNotesDrawer;
+        elements.notesOverlay.onclick = closeNotesDrawer;
+
+        // ------------------ EDITOR / CRIADOR DE HINOS ------------------
+        let currentEditingId = null;
+
+        function openEditHymnModal(number = null) {
+            if (number) {
+                currentEditingId = number;
+                const hymn = currentHymns[number];
+                elements.modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editar Letra do Hino`;
+                elements.editHymnNumber.value = number;
+                elements.editHymnNumber.disabled = true;
+                elements.editHymnTitle.value = hymn.title;
+                elements.editHymnLyrics.value = hymn.lyrics;
+                elements.editHymnSuggestedTone.value = hymn.suggestedTone || ''; 
+                elements.editHymnNInit.value = hymn.nInit || ''; 
+                elements.btnRestoreOriginal.classList.toggle('hidden', !OFICIAL_HYMNS_DB[number]);
+            } else {
+                currentEditingId = null;
+                elements.modalTitle.innerHTML = `<i class="fa-solid fa-plus"></i> Adicionar Novo Hino`;
+                elements.editHymnNumber.value = getNextAvailableHymnNumber();
+                elements.editHymnNumber.disabled = false;
+                elements.editHymnTitle.value = '';
+                elements.editHymnLyrics.value = '';
+                elements.editHymnSuggestedTone.value = ''; 
+                elements.editHymnNInit.value = ''; 
+                elements.btnRestoreOriginal.classList.add('hidden');
+            }
+            elements.editModal.classList.remove('hidden');
+        }
+
+        function getNextAvailableHymnNumber() {
+            let max = 330;
+            Object.keys(currentHymns).forEach(num => {
+                if (Number(num) > max) max = Number(num);
+            });
+            return max + 1;
+        }
+
+        // ------------------ MODAL DE CONFIRMAÇÃO SEGURO ------------------
+        let confirmActionCallback = null;
+
+        function showConfirmModal(title, message, onConfirm) {
+            elements.confirmTitle.textContent = title;
+            elements.confirmMessage.textContent = message;
+            confirmActionCallback = onConfirm;
+            elements.confirmModal.classList.remove('hidden');
+        }
+
+        // ------------------ EVENTOS E LISTENERS ------------------
+        let noteAutosaveTimeout = null;
+        elements.notesArea.oninput = () => {
+            const currentVal = elements.notesArea.value;
+            showSaveState('digitando...');
+            
+            if (noteAutosaveTimeout) clearTimeout(noteAutosaveTimeout);
+            noteAutosaveTimeout = setTimeout(() => {
+                if (!notes[activeHymnId]) notes[activeHymnId] = {};
+                notes[activeHymnId].text = currentVal;
+                saveNotesToCloud();
+                renderHymns();
+            }, 1000);
+        };
+
+        elements.fontSizeSlider.oninput = () => {
+            const size = elements.fontSizeSlider.value;
+            elements.hymnText.style.fontSize = `${size}px`;
+            localStorage.setItem('harpa_font_size', size);
+        };
+
+        elements.btnFavorite.onclick = () => {
+            favorites[activeHymnId] = !favorites[activeHymnId];
+            if (favorites[activeHymnId]) {
+                if (!favoritesOrder.includes(activeHymnId)) {
+                    favoritesOrder.push(activeHymnId);
+                }
+            } else {
+                favoritesOrder = favoritesOrder.filter(id => id !== activeHymnId);
+            }
+            saveFavoritesToCloud();
+            updateHymnHeaderState();
+            renderHymns();
+            showToast(favorites[activeHymnId] ? "Hino adicionado aos favoritos!" : "Removido dos favoritos", favorites[activeHymnId] ? "success" : "info");
+        };
+
+        elements.searchInput.oninput = () => renderHymns();
+
+        function selectTab(tabId, tabButton) {
+            elements.tabAll.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none';
+            elements.tabFavs.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none';
+            elements.tabNotes.className = 'flex-1 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none';
+            
+            tabButton.className = 'flex-1 py-3 border-b-2 border-blue-600 text-blue-600 focus:outline-none';
+            activeTab = tabId;
+            renderHymns();
+        }
+
+        elements.tabAll.onclick = () => selectTab('all', elements.tabAll);
+        elements.tabFavs.onclick = () => selectTab('favs', elements.tabFavs);
+        elements.tabNotes.onclick = () => selectTab('notes', elements.tabNotes);
+
+        elements.btnToggleSidebar.onclick = () => {
+            elements.sidebar.classList.toggle('-translate-x-full');
+            elements.sidebarOverlay.classList.toggle('hidden');
+        };
+        elements.sidebarOverlay.onclick = () => {
+            elements.sidebar.classList.add('-translate-x-full');
+            elements.sidebarOverlay.classList.add('hidden');
+        };
+
+        elements.btnHeaderNewHymn.onclick = () => openEditHymnModal(null);
+        elements.btnEditHymn.onclick = () => openEditHymnModal(activeHymnId);
+
+        elements.btnCloseEditModal.onclick = () => elements.editModal.classList.add('hidden');
+        elements.btnCancelEdit.onclick = () => elements.editModal.classList.add('hidden');
+
+        elements.btnSaveHymn.onclick = () => {
+            let num = parseInt(elements.editHymnNumber.value);
+            const title = elements.editHymnTitle.value.trim();
+            const lyrics = elements.editHymnLyrics.value.trim();
+            const suggestedTone = elements.editHymnSuggestedTone.value.trim(); 
+            const nInit = elements.editHymnNInit.value; 
+
+            if (isNaN(num) || num <= 0) {
+                num = getNextAvailableHymnNumber();
+            }
+            if (!title || !lyrics) {
+                showToast("Título e Letra não podem ficar vazios.", "error");
+                return;
+            }
+
+            userHymns[num] = {
+                number: num,
+                title: title,
+                suggestedTone: suggestedTone, 
+                nInit: nInit, 
+                lyrics: lyrics
+            };
+
+            currentHymns[num] = userHymns[num];
+
+            saveCustomHymnsToCloud();
+            elements.editModal.classList.add('hidden');
+            
+            selectHymn(num, false);
+            showToast(`Hino ${num} gravado na nuvem!`, "success");
+        };
+
+        elements.btnRestoreOriginal.onclick = () => {
+            if (!currentEditingId) return;
+            
+            showConfirmModal(
+                "Restaurar Original",
+                "Tem certeza que deseja apagar suas alterações personalizadas e voltar para a letra oficial da Harpa Cristã?",
+                () => {
+                    delete userHymns[currentEditingId];
+                    saveCustomHymnsToCloud();
+                    elements.editModal.classList.add('hidden');
+                    showToast("Letra restaurada para a versão oficial.", "info");
+                }
+            );
+        };
+
+        elements.btnConfirmCancel.onclick = () => {
+            elements.confirmModal.classList.add('hidden');
+            confirmActionCallback = null;
+        };
+
+        elements.btnConfirmOk.onclick = () => {
+            elements.confirmModal.classList.add('hidden');
+            if (confirmActionCallback) {
+                confirmActionCallback();
+                confirmActionCallback = null;
+            }
+        };
+
+        // ------------------ SUPORTE DE ÁUDIO (DIAPASÃO E METRÔNOMO) ------------------
+        let audioCtx = null;
+        window.playPitch = (frequency) => {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = frequency;
+                
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            } catch (e) {
+                console.error("Falha ao tocar diapasão:", e);
+            }
+        };
+
+        elements.metronomeBpm.oninput = () => {
+            const bpm = elements.metronomeBpm.value;
+            elements.bpmDisplay.textContent = `${bpm} BPM`;
+            if (isMetronomePlaying) {
+                stopMetronome();
+                startMetronome();
+            }
+        };
+
+        elements.btnToggleMetronome.onclick = () => {
+            if (isMetronomePlaying) {
+                stopMetronome();
+            } else {
+                startMetronome();
+            }
+        };
+
+        function startMetronome() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            isMetronomePlaying = true;
+            elements.btnToggleMetronome.innerHTML = '<i class="fa-solid fa-stop text-sm"></i>';
+            elements.btnToggleMetronome.className = "bg-red-600 hover:bg-red-700 text-white w-9 h-9 rounded-full flex items-center justify-center shadow focus:outline-none transition-transform active:scale-95";
+            
+            const bpm = parseInt(elements.metronomeBpm.value);
+            const intervalMs = (60 / bpm) * 1000;
+            let beat = 0;
+
+            metronomeInterval = setInterval(() => {
+                playClick(beat % 4 === 0);
+                beat++;
+            }, intervalMs);
+        }
+
+        function stopMetronome() {
+            isMetronomePlaying = false;
+            elements.btnToggleMetronome.innerHTML = '<i class="fa-solid fa-play text-sm"></i>';
+            elements.btnToggleMetronome.className = "bg-blue-600 hover:bg-blue-700 text-white w-9 h-9 rounded-full flex items-center justify-center shadow focus:outline-none transition-transform active:scale-95";
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+                metronomeInterval = null;
+            }
+        }
+
+        function playClick(isFirstBeat) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.frequency.value = isFirstBeat ? 1000 : 600;
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function showToast(message, type = "info") {
+            const toast = document.createElement('div');
+            const bgClass = type === "success" ? "bg-emerald-600" : type === "error" ? "bg-red-600" : "bg-blue-600";
+            const icon = type === "success" ? "fa-circle-check" : type === "error" ? "fa-circle-exclamation" : "fa-circle-info";
+            
+            toast.className = `${bgClass} text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center space-x-2 text-sm pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            
+            elements.toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ------------------ CARREGAMENTO INICIAL DO APP ------------------
+        window.onload = async () => {
+            const savedSize = localStorage.getItem('harpa_font_size');
+            if (savedSize) {
+                elements.fontSizeSlider.value = savedSize;
+                elements.hymnText.style.fontSize = `${savedSize}px`;
+            }
+
+            selectHymn(1, false);
+            await initAuthAndSync();
+        };
+    </script>
+</body>
+</html>
